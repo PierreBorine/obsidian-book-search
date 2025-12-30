@@ -14,7 +14,7 @@ export class OpenLibraryBooksApi implements BaseBooksApiImpl {
     try {
       const params = {
         q: query,
-        fields: 'isbn,title,subtitle,publish_date,publisher,author_name,number_of_pages_median',
+        fields: 'isbn,title,subtitle,cover_i,publish_date,publisher,author_name,number_of_pages_median',
       };
       const searchResults = await apiGet<OpenLibraryBooksResponse>('https://openlibrary.org/search.json', params);
       if (!searchResults?.numFound) {
@@ -27,6 +27,7 @@ export class OpenLibraryBooksApi implements BaseBooksApiImpl {
     }
   }
 
+  // https://openlibrary.org/developers/api
   private createBookItem(item: OpenLibraryBookItem): Book {
     const date = new Date(item.publish_date[0]);
     return {
@@ -40,6 +41,11 @@ export class OpenLibraryBooksApi implements BaseBooksApiImpl {
       isbn: item.isbn.sort((a, b) => b.length - a.length)[0],
       ...(item.isbn.some(isbn10) && { isbn10: item.isbn.find(isbn10) }),
       ...(item.isbn.some(isbn13) && { isbn13: item.isbn.find(isbn13) }),
+      ...(Object.keys(item).includes('cover_i') && {
+        coverUrl: `https://covers.openlibrary.org/b/id/${item.cover_i}-L.jpg`,
+        coverMediumUrl: `https://covers.openlibrary.org/b/id/${item.cover_i}-M.jpg`,
+        coverSmallUrl: `https://covers.openlibrary.org/b/id/${item.cover_i}-S.jpg`,
+      }),
     };
   }
 }
