@@ -5,8 +5,8 @@ import { OpenLibraryBookItem, OpenLibraryBooksResponse } from './models/openlibr
 const isbn10 = (i: string) => i.length === 10;
 const isbn13 = (i: string) => i.length === 13;
 
-function formatList(list: string[]): string {
-  return list && list.length > 1 ? list.map(item => item.trim()).join(', ') : list[0] ?? '';
+function formatList(list?: string[]): string {
+  return list && list.length > 1 ? list.map(item => item.trim()).join(', ') : list?.[0] ?? '';
 }
 
 export class OpenLibraryBooksApi implements BaseBooksApiImpl {
@@ -29,17 +29,16 @@ export class OpenLibraryBooksApi implements BaseBooksApiImpl {
 
   // https://openlibrary.org/developers/api
   private createBookItem(item: OpenLibraryBookItem): Book {
-    const date = new Date(item.publish_date[0]);
     // Open Library sometimes includes the publisher in the authors
     const authors =
-      item.author_name.length > 1 ? item.author_name.filter(el => el != item.publisher[0]) : item.author_name;
+      item.author_name?.length > 1 ? item.author_name?.filter(el => el != item?.publisher[0]) : item.author_name;
     return {
       title: item.title,
       subtitle: item.subtitle,
       author: formatList(authors),
       authors,
-      publisher: item.publisher[0],
-      publishDate: date.toISOString().slice(0, 10),
+      publisher: item.publisher?.[0],
+      publishDate: item.publish_date && new Date(item.publish_date?.[0]).toISOString().slice(0, 10),
       totalPage: item.number_of_pages_median,
       isbn: item.isbn.sort((a, b) => b.length - a.length)[0],
       ...(item.isbn.some(isbn10) && { isbn10: item.isbn.find(isbn10) }),
